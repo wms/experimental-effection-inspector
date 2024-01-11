@@ -8,12 +8,18 @@ import {
   spawn,
   Instruction,
   Task,
+  suspend,
 } from "effection";
+import { useWebSocket } from "./webSocket.mjs";
 
 // @todo: pass args thru
 export function inspect(op: (...args: any[]) => Operation<void>) {
   return function* () {
-    const events = createSignal<InspectorEvent, never>();
+    const events: InspectorEventSignal = createSignal();
+    yield* spawn(function* () {
+      yield* useWebSocket(events);
+      yield* suspend();
+    });
 
     yield* spawn(function* bar() {
       const taskMap = new Map<Task<unknown>, Frame>();
@@ -29,6 +35,7 @@ export function inspect(op: (...args: any[]) => Operation<void>) {
           const child = taskMap.get(event.result);
           if (child) {
             events.send({
+              at: Date.now(),
               type: "INSTRUCTION_FRAME",
               frame: event.frame,
               seq: event.seq,
@@ -37,7 +44,6 @@ export function inspect(op: (...args: any[]) => Operation<void>) {
           }
         }
 
-        console.log("***", event);
         yield* each.next();
       }
     });
@@ -49,7 +55,7 @@ export function inspect(op: (...args: any[]) => Operation<void>) {
 
 export function* inspectFrame(
   frame: Frame,
-  signal: Signal<InspectorEvent, never>,
+  signal: InspectorEventSignal,
   op: () => Operation<any>
 ) {
   const { createChild } = frame;
@@ -59,7 +65,7 @@ export function* inspectFrame(
       return yield* tapOp(child, signal, op);
     });
 
-    signal.send({ type: "CREATE_CHILD", frame, child });
+    signal.send({ at: Date.now(), type: "CREATE_CHILD", frame, child });
 
     inspectFrame(child, signal, op);
 
@@ -71,10 +77,11 @@ export function* inspectFrame(
 
 export function* tapOp(
   frame: Frame,
-  signal: Signal<InspectorEvent, never>,
+  signal: InspectorEventSignal,
   op: () => Operation<any>
 ): Generator<Instruction, any, any> {
   signal.send({
+    at: Date.now(),
     type: "OP_START",
     frame,
     op,
@@ -86,6 +93,7 @@ export function* tapOp(
   let next = iterator.next();
   while (!next.done) {
     signal.send({
+      at: Date.now(),
       type: "INSTRUCTION",
       frame,
       seq,
@@ -95,6 +103,7 @@ export function* tapOp(
     const result = yield next.value;
 
     signal.send({
+      at: Date.now(),
       type: "INSTRUCTION_RESULT",
       frame,
       seq,
@@ -113,32 +122,33 @@ const isTask = (obj: unknown): obj is Task<unknown> =>
   Symbol.toStringTag in obj &&
   obj[Symbol.toStringTag] === "Task";
 
-export type InspectorEvent =
+export type InspectorEvent = {
+  at: number;
+  frame: Frame;
+} & (
   | {
       type: "CREATE_CHILD";
-      frame: Frame;
       child: Frame;
     }
   | {
       type: "OP_START";
-      frame: Frame;
       op: () => Operation<any>;
     }
   | {
       type: "INSTRUCTION";
-      frame: Frame;
       seq: number;
       instruction: Instruction;
     }
   | {
       type: "INSTRUCTION_RESULT";
-      frame: Frame;
       seq: number;
       result: unknown;
     }
   | {
       type: "INSTRUCTION_FRAME";
-      frame: Frame;
       seq: number;
       child: Frame;
-    };
+    }
+);
+
+export type InspectorEventSignal = Signal<InspectorEvent, never>;

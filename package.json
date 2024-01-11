@@ -12,9 +12,13 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.3",
     "@types/node": "^20.10.8",
+    "@types/ws": "^8.5.10",
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
     "effection": "^3.0.1"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
   }
 }
