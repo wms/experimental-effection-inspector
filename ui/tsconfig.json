@@ -1,0 +1,14 @@
+{
+  "extends": "@tsconfig/recommended",
+  "compilerOptions": {
+    "noEmit": true,
+    "target": "ES2022",
+    "outDir": "../dist/ui",
+    "rootDir": "./src",
+    "jsx": "react-jsx",
+    "paths": {
+      "/*": ["../*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

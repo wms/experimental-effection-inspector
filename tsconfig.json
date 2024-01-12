@@ -1,9 +1,10 @@
 {
-	"extends": "@tsconfig/recommended",
-	"compilerOptions": {
-		"module": "NodeNext",
-		"target": "ES2022",
-		"outDir": "./dist",
-		"rootDir": "./src"
-	}
+  "extends": "@tsconfig/recommended",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "target": "ES2022",
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*"]
 }

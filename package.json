@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "clean": "rm -r dist/*",
+    "build:inspect": "tsc",
+    "build:ui": "parcel build",
+    "build": "npm run build:inspect && npm run build:ui",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,7 +16,14 @@
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.3",
     "@types/node": "^20.10.8",
+    "@types/react-dom": "^18.2.18",
     "@types/ws": "^8.5.10",
+    "parcel": "^2.11.0",
+    "process": "^0.11.10",
+    "react": "^18.2.0",
+    "react-arborist": "^3.4.0",
+    "react-dom": "^18.2.0",
+    "sturdy-websocket": "^0.2.1",
     "typescript": "^5.3.3"
   },
   "peerDependencies": {
@@ -20,5 +31,11 @@
   },
   "dependencies": {
     "ws": "^8.16.0"
+  },
+  "targets": {
+    "default": {
+      "source": "./ui/src/index.html",
+      "distDir": "./dist/ui"
+    }
   }
 }
